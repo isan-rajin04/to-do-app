@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import TaskCard, { Task } from "@/components/TaskCard";
 import { Plus, Search, Loader2 } from "lucide-react";
-import { useDebounce } from "@/lib/hooks"; // We will create this utility
+import { useDebounce } from "@/lib/hooks";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -16,11 +17,12 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   
-  // New task form state
-  const [isAdding, setIsAdding] = useState<string | null>(null); // Stores which column is adding
+  const [isAdding, setIsAdding] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPriority, setNewPriority] = useState("MEDIUM");
+  const [newDueDate, setNewDueDate] = useState("");
+  const [newDuration, setNewDuration] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -45,7 +47,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleAddTask = async (e: React.FormEvent, status: string) => {
+  const handleAddTask = async (e: React.FormEvent, taskStatus: string) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
@@ -53,7 +55,14 @@ export default function Dashboard() {
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle, description: newDesc, status, priority: newPriority }),
+        body: JSON.stringify({ 
+          title: newTitle, 
+          description: newDesc, 
+          status: taskStatus, 
+          priority: newPriority,
+          dueDate: newDueDate || null,
+          duration: newDuration || null
+        }),
       });
       if (res.ok) {
         const newTask = await res.json();
@@ -70,6 +79,8 @@ export default function Dashboard() {
     setNewTitle("");
     setNewDesc("");
     setNewPriority("MEDIUM");
+    setNewDueDate("");
+    setNewDuration("");
   };
 
   const handleUpdateTask = async (id: string, updates: Partial<Task>) => {
@@ -120,7 +131,11 @@ export default function Dashboard() {
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
         
         {/* Header Area */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 shrink-0">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 shrink-0"
+        >
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Board</h1>
             <p className="text-slate-500 mt-1 text-sm">Manage your tasks effortlessly.</p>
@@ -138,12 +153,18 @@ export default function Dashboard() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Kanban Board */}
         <div className="flex-grow flex flex-col sm:flex-row gap-6 overflow-x-auto pb-4">
-          {columns.map(column => (
-            <div key={column.id} className={`flex-1 min-w-[300px] flex flex-col bg-slate-100/50 rounded-2xl border ${column.color} overflow-hidden shadow-sm`}>
+          {columns.map((column, idx) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              key={column.id} 
+              className={`flex-1 min-w-[320px] flex flex-col bg-slate-100/50 rounded-2xl border ${column.color} overflow-hidden shadow-sm`}
+            >
               {/* Column Header */}
               <div className="px-4 py-3 border-b border-slate-200/50 bg-white/50 backdrop-blur-sm flex justify-between items-center shrink-0">
                 <div className="flex items-center space-x-2">
@@ -163,74 +184,112 @@ export default function Dashboard() {
               {/* Column Content (Scrollable) */}
               <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
                 
-                {/* Add Task Form (Inline) */}
-                {isAdding === column.id && (
-                  <form onSubmit={(e) => handleAddTask(e, column.id)} className="bg-white p-4 rounded-xl shadow-lg shadow-slate-200/50 border border-indigo-200 mb-3 animate-in slide-in-from-top-2 duration-200">
-                    <input
-                      type="text"
-                      required
-                      placeholder="What needs to be done?"
-                      className="w-full text-sm font-semibold text-slate-900 mb-2 border-b border-slate-200 focus:outline-none focus:border-indigo-500 bg-transparent px-1 py-1"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      autoFocus
-                    />
-                    <textarea
-                      placeholder="Add details..."
-                      className="w-full text-xs text-slate-600 mb-2 border border-slate-200 rounded focus:outline-none focus:border-indigo-400 bg-transparent px-2 py-1.5 min-h-[60px] resize-none"
-                      value={newDesc}
-                      onChange={(e) => setNewDesc(e.target.value)}
-                    />
-                    <div className="flex items-center justify-between mb-3">
-                      <select
-                        value={newPriority}
-                        onChange={(e) => setNewPriority(e.target.value)}
-                        className="text-[11px] font-medium bg-slate-100 rounded px-1.5 py-1 text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500"
-                      >
-                        <option value="LOW">Low Prio</option>
-                        <option value="MEDIUM">Med Prio</option>
-                        <option value="HIGH">High Prio</option>
-                      </select>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        type="button"
-                        onClick={closeAddForm}
-                        className="px-2 py-1 text-xs text-slate-500 hover:text-slate-800 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm transition-colors"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </form>
-                )}
+                <AnimatePresence>
+                  {/* Add Task Form (Inline) */}
+                  {isAdding === column.id && (
+                    <motion.form 
+                      initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, height: "auto", scale: 1 }}
+                      exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                      onSubmit={(e) => handleAddTask(e, column.id)} 
+                      className="bg-white p-4 rounded-xl shadow-lg shadow-slate-200/50 border border-indigo-200 mb-4 overflow-hidden"
+                    >
+                      <input
+                        type="text"
+                        required
+                        placeholder="What needs to be done?"
+                        className="w-full text-sm font-semibold text-slate-900 mb-2 border-b border-slate-200 focus:outline-none focus:border-indigo-500 bg-transparent px-1 py-1"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        autoFocus
+                      />
+                      <textarea
+                        placeholder="Add details..."
+                        className="w-full text-xs text-slate-600 mb-3 border border-slate-200 rounded focus:outline-none focus:border-indigo-400 bg-transparent px-2 py-1.5 min-h-[60px] resize-none"
+                        value={newDesc}
+                        onChange={(e) => setNewDesc(e.target.value)}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Priority</span>
+                          <select
+                            value={newPriority}
+                            onChange={(e) => setNewPriority(e.target.value)}
+                            className="w-full text-xs font-semibold bg-slate-100 rounded px-1.5 py-1.5 text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500"
+                          >
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HIGH">High</option>
+                          </select>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Due Date</span>
+                          <input 
+                            type="date"
+                            value={newDueDate}
+                            onChange={(e) => setNewDueDate(e.target.value)}
+                            className="w-full text-xs font-semibold bg-slate-100 rounded px-1.5 py-1.5 text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Duration</span>
+                          <input 
+                            type="text"
+                            placeholder="e.g. 2 hours"
+                            value={newDuration}
+                            onChange={(e) => setNewDuration(e.target.value)}
+                            className="w-full text-xs font-semibold bg-slate-100 rounded px-1.5 py-1.5 text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          type="button"
+                          onClick={closeAddForm}
+                          className="px-2 py-1 text-xs text-slate-500 hover:text-slate-800 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
 
                 {/* Tasks List */}
                 <div className="space-y-3">
-                  {tasks
-                    .filter(t => t.status === column.id)
-                    .map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onUpdate={handleUpdateTask}
-                        onDelete={handleDeleteTask}
-                      />
-                    ))}
+                  <AnimatePresence mode="popLayout">
+                    {tasks
+                      .filter(t => t.status === column.id)
+                      .map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onUpdate={handleUpdateTask}
+                          onDelete={handleDeleteTask}
+                        />
+                      ))}
+                  </AnimatePresence>
                   
                   {tasks.filter(t => t.status === column.id).length === 0 && isAdding !== column.id && (
-                    <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                    <motion.div 
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }}
+                      className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50"
+                    >
                       No tasks yet
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </main>

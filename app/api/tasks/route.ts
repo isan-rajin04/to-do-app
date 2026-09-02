@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { title, description, status, priority } = await req.json();
+    const { title, description, status, priority, dueDate, duration } = await req.json();
 
     if (!title) {
       return NextResponse.json({ message: "Title is required" }, { status: 400 });
@@ -51,6 +51,8 @@ export async function POST(req: NextRequest) {
         description,
         status: status || "TODO",
         priority: priority || "MEDIUM",
+        dueDate: dueDate ? new Date(dueDate) : null,
+        duration: duration || null,
         userId: session.user.id,
       },
     });
