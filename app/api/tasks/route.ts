@@ -10,9 +10,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const searchParams = req.nextUrl.searchParams;
+  const search = searchParams.get("search") || "";
+
   try {
     const tasks = await prisma.task.findMany({
-      where: { userId: session.user.id },
+      where: { 
+        userId: session.user.id,
+        title: {
+          contains: search,
+          mode: "insensitive"
+        }
+      },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(tasks);
@@ -30,7 +39,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { title, description, status } = await req.json();
+    const { title, description, status, priority } = await req.json();
 
     if (!title) {
       return NextResponse.json({ message: "Title is required" }, { status: 400 });
@@ -41,6 +50,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         status: status || "TODO",
+        priority: priority || "MEDIUM",
         userId: session.user.id,
       },
     });

@@ -21,6 +21,7 @@ model Task {
   title       String
   description String?
   status      String   @default("TODO") // "TODO", "IN_PROGRESS", "DONE"
+  priority    String   @default("MEDIUM") // "LOW", "MEDIUM", "HIGH"
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())

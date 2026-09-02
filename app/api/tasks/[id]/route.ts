@@ -15,7 +15,7 @@ export async function PUT(
 
   try {
     const taskId = params.id;
-    const { title, description, status } = await req.json();
+    const { title, description, status, priority } = await req.json();
 
     const existingTask = await prisma.task.findUnique({
       where: { id: taskId },
@@ -31,7 +31,7 @@ export async function PUT(
 
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: { title, description, status },
+      data: { title, description, status, priority },
     });
 
     return NextResponse.json(updatedTask);
