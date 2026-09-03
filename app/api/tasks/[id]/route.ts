@@ -14,7 +14,7 @@ export async function PUT(
   }
 
   try {
-    const taskId = params.id;
+    const { id: taskId } = await params;
     const { title, description, status, priority, dueDate, duration } = await req.json();
 
     const existingTask = await prisma.task.findUnique({
@@ -29,16 +29,17 @@ export async function PUT(
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
+    const dataToUpdate: any = {};
+    if (title !== undefined) dataToUpdate.title = title;
+    if (description !== undefined) dataToUpdate.description = description;
+    if (status !== undefined) dataToUpdate.status = status;
+    if (priority !== undefined) dataToUpdate.priority = priority;
+    if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
+    if (duration !== undefined) dataToUpdate.duration = duration === "" ? null : duration;
+
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: { 
-        title, 
-        description, 
-        status, 
-        priority,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        duration: duration === "" ? null : duration
-      },
+      data: dataToUpdate,
     });
 
     return NextResponse.json(updatedTask);
@@ -59,7 +60,7 @@ export async function DELETE(
   }
 
   try {
-    const taskId = params.id;
+    const { id: taskId } = await params;
 
     const existingTask = await prisma.task.findUnique({
       where: { id: taskId },
