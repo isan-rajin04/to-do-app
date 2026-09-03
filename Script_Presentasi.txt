@@ -1,0 +1,22 @@
+﻿# Script Presentasi Screen Record: Aplikasi To-Do List (Full-Stack)
+
+Durasi Estimasi: 5 - 10 Menit
+
+1. Pembukaan (0:00 - 1:00)
+Halo semuanya, perkenalkan nama saya [Sebutkan Nama Anda]. Pada kesempatan kali ini, saya ingin mendemonstrasikan sebuah project Full-Stack Web Application berupa aplikasi To-Do List yang baru saja saya kembangkan. Aplikasi ini dibangun menggunakan teknologi modern, yaitu Next.js, Tailwind CSS, Framer Motion, Supabase (PostgreSQL), dan Prisma ORM.
+
+2. Fitur Autentikasi & Keamanan (1:00 - 2:30)
+Fitur pertama yang saya buat adalah sistem Autentikasi menggunakan NextAuth. Password user disimpan di database dengan enkripsi Bcrypt demi keamanan. User hanya bisa melihat dan mengelola tugas yang mereka buat sendiri.
+
+3. Demo UI/UX Dashboard & Animasi (2:30 - 4:30)
+Di bagian Dashboard, saya menggunakan tata letak Kanban Board (To Do, In Progress, Done). Terdapat fitur Task Statistics yang terhubung langsung ke database. Saya juga menggunakan library Framer Motion untuk memberikan efek animasi yang halus.
+
+4. Demo Fitur Utama CRUD (4:30 - 6:30)
+Saat membuat task, kita bisa menambahkan Prioritas, Tenggat Waktu (Due Date), dan Durasi. Kita bisa memindahkan status task dari To Do ke In Progress atau Done dengan menekan tombol panah, dan datanya langsung ter-update di database.
+
+5. Penjelasan Kode & Arsitektur (6:30 - 8:30)
+(Tampilkan file prisma/schema.prisma dan app/api/tasks/route.ts)
+Di schema database, tabel Task berelasi dengan User. Untuk Backend API, saya menggunakan Route Handlers dari Next.js dengan proteksi session. Untuk Next.js versi 15, saya memastikan parameter dikelola secara Asynchronous menggunakan await.
+
+6. Git Workflow & Penutup (8:30 - 9:30)
+Seluruh development ini saya terapkan menggunakan Git Workflow. Saya mengerjakan penambahan fitur di dalam branch terpisah bernama isan-dev agar branch utama (main) selalu stabil. Sekian presentasi dari saya, terima kasih!
