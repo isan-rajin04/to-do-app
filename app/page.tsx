@@ -138,7 +138,25 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Board</h1>
-            <p className="text-slate-500 mt-1 text-sm">Manage your tasks effortlessly.</p>
+            <p className="text-slate-500 mt-1 text-sm mb-3">Manage your tasks effortlessly.</p>
+            
+            {/* Task Stats connected to database state */}
+            {tasks.length > 0 && (
+              <div className="flex items-center gap-3 text-xs font-semibold">
+                <div className="flex items-center bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md border border-indigo-100">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 mr-1.5"></span>
+                  In Progress: {tasks.filter(t => t.status === "IN_PROGRESS").length}
+                </div>
+                <div className="flex items-center bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md border border-emerald-100">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
+                  Done: {tasks.filter(t => t.status === "DONE").length}
+                </div>
+                <div className="flex items-center bg-slate-100 text-slate-600 px-2 py-1 rounded-md border border-slate-200">
+                  <span className="w-2 h-2 rounded-full bg-slate-400 mr-1.5"></span>
+                  To Do: {tasks.filter(t => t.status === "TODO").length}
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="relative w-full sm:w-72">
